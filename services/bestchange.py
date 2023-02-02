@@ -1,4 +1,6 @@
 from typing import Union
+import re
+from bs4.element import Tag
 import requests
 from bs4 import BeautifulSoup
 
@@ -48,7 +50,20 @@ class BestChange:
 
     def parse_rate(self, html_data: str) -> dict:
         data = BeautifulSoup(html_data)
-        print(html_data)
+        rate_table = data.find(id='rates_block').tbody.contents
         result = {}
-        result = 5556
+        for line in rate_table:
+            id_point, rate = self.__parse_table_line(line)
+            result[id_point] = rate
         return result
+
+    @staticmethod
+    def __parse_table_line(self, line: Tag) -> tuple[str, float]:
+
+        try:
+            url = line.find(class_='bj').a.get('href')
+            id = re.search(r'(?<=id=)\d+', url)
+            print(id[0], '\t', url)
+        except (TypeError, AttributeError):
+            pass
+
