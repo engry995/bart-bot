@@ -1,6 +1,6 @@
 from telebot.types import Message
 from loader import bot
-from services.bestchange import get_difference_between_first_by_btc_usdt
+from services.bestchange import BestChange
 
 
 def base_message(user_id: int):
@@ -12,11 +12,15 @@ def wrong_message(user_id: int):
     base_message(user_id)
 
 
-def message_about_rate_difference(user_id, text):
-    reply = get_difference_between_first_by_btc_usdt(text)
-    if reply == -1:
+def message_from_bestchange(user_id, text):
+    point = BestChange(text)
+    reply = point.difference_with_first_by_btc_usdt
+
+    if reply == BestChange.POINT_NOT_EXIST:
         reply = f'Пункт с ID <{text}> не найден.'
-    # bot.send_message(user_id, f'MESSAGE: {text}, {type(text) = }\nREPLY: {reply}')
+    elif reply == BestChange.NOT_RESPONSE:
+        reply = f'Нет ответа от {point.base_url}. Попробуйте позже.'
+
     bot.send_message(user_id, reply)
     base_message(user_id)
 
@@ -26,6 +30,6 @@ def main_handler(message: Message):
     user_id = message.from_user.id
     text = message.text.strip()
     if text.isdigit():
-        message_about_rate_difference(user_id, text)
+        message_from_bestchange(user_id, text)
     else:
         wrong_message(user_id)
