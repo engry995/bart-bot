@@ -14,7 +14,11 @@ def wrong_message(user_id: int):
 
 def message_about_rate_difference(user_id, text):
     reply = get_difference_between_first_by_btc_usdt(text)
-    bot.send_message(user_id, f'MESSAGE: {text}\nREPLY: {reply}')
+    if reply == -1:
+        reply = f'Пункт с ID <{text}> не найден.'
+    # bot.send_message(user_id, f'MESSAGE: {text}, {type(text) = }\nREPLY: {reply}')
+    bot.send_message(user_id, reply)
+    base_message(user_id)
 
 
 @bot.message_handler(content_types=['text'])
@@ -25,7 +29,3 @@ def main_handler(message: Message):
         message_about_rate_difference(user_id, text)
     else:
         wrong_message(user_id)
-
-@bot.message_handler
-def another_message(message: Message):
-    wrong_message(message.from_user.id)
