@@ -1,7 +1,7 @@
 from telebot.types import Message
 
 
-def listener(message: list[Message]) -> None:
+def listener(message) -> None:
     """
     Функция выводит все сообщения пользователей на экран.
     :param message: Сообщение из телеграмм.

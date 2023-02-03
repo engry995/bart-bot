@@ -1,20 +1,14 @@
-import requests
-import re
-from bs4 import BeautifulSoup
+from time import sleep
+from bestchange import BestChange
 
-url = 'https://www.bestchange.ru/bitcoin-to-tether-trc20.html'
-response = requests.get(url, timeout=10)
-reply = response.text
+p1 = BestChange('555')
+print(p1.difference_with_first_by_btc_usdt)
 
-data = BeautifulSoup(reply, features='html.parser')
 
-# table = data.find(id='rates_block').tbody.findAll('tr')
-table = data.find(id='rates_block').tbody.contents
 
-for line in table:
-    try:
-        url = line.find(class_='bj').a.get('href')
-        id = re.search(r'(?<=id=)\d+', url)
-        print(id[0], '\t', url)
-    except (TypeError, AttributeError):
-        pass
+p2 = BestChange('884')
+print(p2.difference_with_first_by_btc_usdt)
+
+sleep(5)
+p3 = BestChange('686')
+print(p3.difference_with_first_by_btc_usdt)

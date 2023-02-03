@@ -1,14 +1,22 @@
-from typing import Union
+from typing import Union, Optional
+from time import time
 import re
 from bs4.element import Tag
 import requests
 from bs4 import BeautifulSoup
+
+import config
 
 
 class BestChange:
 
     POINT_NOT_EXIST = -111
     NOT_RESPONSE = -222
+    PARSING_FAIL = -333
+
+    __cache_data_btc_usd = None
+    __time_cache_btc_usd = 0
+
 
     def __init__(self, point_id: Union[str, int]):
 
@@ -17,25 +25,58 @@ class BestChange:
         else:
             raise TypeError('point_id may be int or string of digit')
         self.base_url = 'https://www.bestchange.ru/'
+        self.error_occurred = False
+        self.error = None
+
+    @classmethod
+    def __get_table_from_cache(cls) -> Optional[dict]:
+        now = time()
+        if now - cls.__time_cache_btc_usd <= config.CACHE_TIME:
+            print('Получили данные из кэша')
+            return cls.__cache_data_btc_usd
+
+    @classmethod
+    def __write_table_to_cache(cls, table:dict) -> None:
+        cls.__cache_data_btc_usd = table
+        cls.__time_cache_btc_usd = time()
+        print('Записали данные в кэш')
 
     @property
     def difference_with_first_by_btc_usdt(self) -> float:
         url_suffix = 'bitcoin-to-tether-trc20.html'
-        return self.__get_difference_between_first(url_suffix)
+        reply = self.__get_difference_between_first(url_suffix)
+        if self.error_occurred:
+            return self.error
+        else:
+            return reply
 
-    def __get_difference_between_first(self, url_suffix: str) -> float:
+    def __get_difference_between_first(self, url_suffix: str) -> Optional[float]:
         url = self.base_url + url_suffix
         data = self.get_parsed_data(url)
-        return data
+        if self.error_occurred:
+            return
+
+        point_rate = data.get(self.point_id)
+        if not point_rate:
+            self.error_occurred = True
+            self.error = self.POINT_NOT_EXIST
+            point_rate = 0
+        return data['first_line'] - point_rate
 
     def get_parsed_data(self, url):
-        data = self.get_raw_html(url)
-        if data == self.NOT_RESPONSE:
+        data = self.__get_table_from_cache()
+        if data:
             return data
+
+        data = self.get_raw_html(url)
+        if self.error_occurred:
+            return
         data = self.parse_rate(data)
         return data
 
-    def get_raw_html(self, url: str) -> Union[str, int]:
+    def get_raw_html(self, url: str) -> Optional[str]:
+        print('Получаем данные с сервера')
+        reply = None
         for i in range(3):
             try:
                 response = requests.get(url, timeout=10)
@@ -45,25 +86,50 @@ class BestChange:
             except requests.exceptions.RequestException:
                 pass
         else:
-            reply = self.NOT_RESPONSE
+            self.error_occurred = True
+            self.error = self.NOT_RESPONSE
         return reply
 
-    def parse_rate(self, html_data: str) -> dict:
-        data = BeautifulSoup(html_data)
+    def parse_rate(self, html_data: str) -> Optional[dict]:
+        data = BeautifulSoup(html_data, features='html.parser')
         rate_table = data.find(id='rates_block').tbody.contents
         result = {}
         for line in rate_table:
             id_point, rate = self.__parse_table_line(line)
             result[id_point] = rate
+        if len(result) == 0:
+            self.error_occurred = True
+            self.error = self.PARSING_FAIL
+            return
+        result['first_line'] = self.__get_first_line_rate(rate_table)
+        self.__write_table_to_cache(result)
         return result
 
     @staticmethod
-    def __parse_table_line(self, line: Tag) -> tuple[str, float]:
+    def __parse_table_line(line: Tag):
+
+        point_id, rate = None, None
+        if not isinstance(line, Tag):
+            return point_id, rate
 
         try:
-            url = line.find(class_='bj').a.get('href')
-            id = re.search(r'(?<=id=)\d+', url)
-            print(id[0], '\t', url)
-        except (TypeError, AttributeError):
-            pass
+            url_to_point = line.find(class_='bj').a.get('href')
+            point_id = re.search(r'(?<=id=)\d+', url_to_point)
+            rate = line.find_all(class_='bi')[1]
+            rate = rate.next_element
 
+            if point_id and rate:
+                point_id = point_id.group()
+                rate = str(rate.string)
+                rate = float(rate.strip().replace(' ', ''))
+
+        except (TypeError, AttributeError, IndexError, ValueError):
+            point_id, rate = None, None
+
+        return point_id, rate
+
+    def __get_first_line_rate(self, table):
+        for line in table:
+            _, rate = self.__parse_table_line(line)
+            if rate:
+                return rate

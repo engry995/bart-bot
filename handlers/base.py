@@ -17,7 +17,7 @@ def message_from_bestchange(user_id, text):
     reply = point.difference_with_first_by_btc_usdt
 
     if reply == BestChange.POINT_NOT_EXIST:
-        reply = f'Пункт с ID <{text}> не найден.'
+        reply = f'Информация по пункту с ID <{text}> не найдена.'
     elif reply == BestChange.NOT_RESPONSE:
         reply = f'Нет ответа от {point.base_url}. Попробуйте позже.'
 
