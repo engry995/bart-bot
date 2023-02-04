@@ -18,12 +18,8 @@ class BestChange:
     __time_cache_btc_usd = 0
 
 
-    def __init__(self, point_id: Union[str, int]):
+    def __init__(self):
 
-        if isinstance(point_id, int) or point_id.isdigit():
-            self.point_id = point_id
-        else:
-            raise TypeError('point_id may be int or string of digit')
         self.base_url = 'https://www.bestchange.ru/'
         self.error_occurred = False
         self.error = None
@@ -41,22 +37,33 @@ class BestChange:
         cls.__time_cache_btc_usd = time()
         print('Записали данные в кэш')
 
-    @property
-    def difference_with_first_by_btc_usdt(self) -> float:
+    def __reset_error(self):
+        self.error_occurred = False
+        self.error = None
+
+    def difference_with_first_by_btc_usdt(self, point_id: Union[str, int]) -> float:
         url_suffix = 'bitcoin-to-tether-trc20.html'
-        reply = self.__get_difference_between_first(url_suffix)
+        reply = self.__get_difference_between_first(url_suffix, point_id)
         if self.error_occurred:
             return self.error
         else:
             return reply
 
-    def __get_difference_between_first(self, url_suffix: str) -> Optional[float]:
+    def __get_difference_between_first(self, url_suffix: str, point_id: Union[str, int]) -> Optional[float]:
+
+        if isinstance(point_id, int):
+            point_id = str(point_id)
+        elif not isinstance(point_id, str) or not point_id.isdigit():
+            raise TypeError('point_id may be int or string of digit')
+
         url = self.base_url + url_suffix
+
+        self.__reset_error()
         data = self.get_parsed_data(url)
         if self.error_occurred:
             return
 
-        point_rate = data.get(self.point_id)
+        point_rate = data.get(point_id)
         if not point_rate:
             self.error_occurred = True
             self.error = self.POINT_NOT_EXIST
