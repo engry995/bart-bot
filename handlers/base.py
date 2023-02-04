@@ -1,8 +1,6 @@
 from telebot.types import Message
-from loader import bot
+from loader import bot, best_change
 from services.bestchange import BestChange
-
-best_change = BestChange()
 
 
 def base_message(user_id: int):
@@ -17,11 +15,12 @@ def wrong_message(user_id: int):
 def message_from_bestchange(user_id, point_id):
 
     reply = best_change.difference_with_first_by_btc_usdt(point_id)
-
     if reply == BestChange.POINT_NOT_EXIST:
         reply = f'Информация по пункту с ID <{point_id}> не найдена.'
     elif reply == BestChange.NOT_RESPONSE:
         reply = f'Нет ответа от {best_change.base_url}. Попробуйте позже.'
+    elif reply == BestChange.PARSING_FAIL:
+        reply = 'Сбой обработки. Попробуйте позже.'
 
     bot.send_message(user_id, reply)
     base_message(user_id)

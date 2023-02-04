@@ -4,7 +4,6 @@ import re
 from bs4.element import Tag
 import requests
 from bs4 import BeautifulSoup
-
 import config
 
 
@@ -16,7 +15,6 @@ class BestChange:
 
     __cache_data_btc_usd = None
     __time_cache_btc_usd = 0
-
 
     def __init__(self):
 
