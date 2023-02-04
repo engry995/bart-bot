@@ -1,4 +1,5 @@
 from telebot.types import Message
+from telebot import logger
 from loader import bot, best_change
 from services.bestchange import BestChange
 
@@ -23,6 +24,7 @@ def message_from_bestchange(user_id, point_id):
         reply = 'Сбой обработки. Попробуйте позже.'
 
     bot.send_message(user_id, reply)
+    logger.info(f'Отправлено сообщение для {user_id} ::: {reply}')
     base_message(user_id)
 
 

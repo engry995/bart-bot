@@ -5,7 +5,7 @@ from bs4.element import Tag
 import requests
 from bs4 import BeautifulSoup
 import config
-
+from telebot import logger
 
 class BestChange:
 
@@ -26,14 +26,14 @@ class BestChange:
     def __get_table_from_cache(cls) -> Optional[dict]:
         now = time()
         if now - cls.__time_cache_btc_usd <= config.CACHE_TIME:
-            print('Получили данные из кэша')
+            logger.info('Получили данные из кэша')
             return cls.__cache_data_btc_usd
 
     @classmethod
     def __write_table_to_cache(cls, table:dict) -> None:
         cls.__cache_data_btc_usd = table
         cls.__time_cache_btc_usd = time()
-        print('Записали данные в кэш')
+        logger.info('Записали данные в кэш')
 
     def __reset_error(self):
         self.error_occurred = False
@@ -80,7 +80,7 @@ class BestChange:
         return data
 
     def get_raw_html(self, url: str) -> Optional[str]:
-        print('Получаем данные с сервера')
+        logger.info('Получаем данные с сервера')
         reply = None
         for i in range(3):
             try:
