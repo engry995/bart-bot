@@ -1,11 +1,17 @@
-from telebot.types import Message
+from telebot.types import Message, CallbackQuery
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot import logger
 from loader import bot, best_change
 from services.bestchange import BestChange
 
 
 def base_message(user_id: int):
-    bot.send_message(user_id, 'Введите ID обменного пункта:')
+
+    points = best_change.get_random_point_by_btc_usdt()
+    markup = InlineKeyboardMarkup(row_width=5)
+    markup.add(*[InlineKeyboardButton(text=point, callback_data=f'point_id:{point}') for point in points])
+
+    bot.send_message(user_id, 'Введите ID обменного пункта или выберите из предложенных:', reply_markup=markup)
 
 
 def wrong_message(user_id: int):
@@ -36,3 +42,11 @@ def main_handler(message: Message):
         message_from_bestchange(user_id, text)
     else:
         wrong_message(user_id)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('point_id:'))
+def callback_point_id(call: CallbackQuery):
+    bot.answer_callback_query(call.id)
+    user_id = call.from_user.id
+    point_id = call.data.replace('point_id:', '')
+    message_from_bestchange(user_id, point_id)

@@ -1,5 +1,6 @@
 from typing import Union, Optional
 from time import time
+import random
 import re
 from bs4.element import Tag
 import requests
@@ -19,6 +20,7 @@ class BestChange:
     def __init__(self):
 
         self.base_url = 'https://www.bestchange.ru/'
+        self.url_suffix_btc_usd = 'bitcoin-to-tether-trc20.html'
         self.error_occurred = False
         self.error = None
 
@@ -30,7 +32,7 @@ class BestChange:
             return cls.__cache_data_btc_usd
 
     @classmethod
-    def __write_table_to_cache(cls, table:dict) -> None:
+    def __write_table_to_cache(cls, table: dict) -> None:
         cls.__cache_data_btc_usd = table
         cls.__time_cache_btc_usd = time()
         logger.info('Записали данные в кэш')
@@ -40,12 +42,18 @@ class BestChange:
         self.error = None
 
     def difference_with_first_by_btc_usdt(self, point_id: Union[str, int]) -> float:
-        url_suffix = 'bitcoin-to-tether-trc20.html'
+        url_suffix = self.url_suffix_btc_usd
         reply = self.__get_difference_between_first(url_suffix, point_id)
         if self.error_occurred:
             return self.error
         else:
             return reply
+
+    def get_random_point_by_btc_usdt(self, count=10) -> list[str]:
+        self.__reset_error()
+        data = self.get_parsed_data(self.base_url + self.url_suffix_btc_usd)
+        points = [point for point in data.keys() if point and point.isdigit()]
+        return random.sample(points, count)
 
     def __get_difference_between_first(self, url_suffix: str, point_id: Union[str, int]) -> Optional[float]:
 
