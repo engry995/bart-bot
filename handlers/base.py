@@ -47,6 +47,8 @@ def main_handler(message: Message):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('point_id:'))
 def callback_point_id(call: CallbackQuery):
     bot.answer_callback_query(call.id)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.id, reply_markup=None)
     user_id = call.from_user.id
     point_id = call.data.replace('point_id:', '')
+    bot.send_message(user_id, f'Point ID: {point_id}')
     message_from_bestchange(user_id, point_id)

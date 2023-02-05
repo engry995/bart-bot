@@ -1,15 +1,21 @@
-from typing import Union, Optional
-from time import time
+import requests
 import random
 import re
+
+from typing import Union, Optional
+from time import time
 from bs4.element import Tag
-import requests
 from bs4 import BeautifulSoup
+
 import config
 from telebot import logger
 
-class BestChange:
 
+class BestChange:
+    """
+    Класс для работы с сайтом BestChange.ru
+    """
+    # Possible error
     POINT_NOT_EXIST = -111
     NOT_RESPONSE = -222
     PARSING_FAIL = -333
@@ -49,11 +55,11 @@ class BestChange:
         else:
             return reply
 
-    def get_random_point_by_btc_usdt(self, count=10) -> list[str]:
+    def get_random_point_by_btc_usdt(self, count=config.NUMBER_RANDOM_POINT_ID) -> list[str]:
         self.__reset_error()
         data = self.get_parsed_data(self.base_url + self.url_suffix_btc_usd)
         points = [point for point in data.keys() if point and point.isdigit()]
-        return random.sample(points, count)
+        return random.sample(points, min(count, len(points)))
 
     def __get_difference_between_first(self, url_suffix: str, point_id: Union[str, int]) -> Optional[float]:
 
