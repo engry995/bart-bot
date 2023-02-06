@@ -31,7 +31,7 @@ docker pull engry995/bart-bot
 docker run -e BOT_TOKEN=TOKEN_TELEGRAMM_BOT engry995/bart-bot
 ```
 где *TOKEN_TELEGRAMM_BOT* - токен, полученный от API телеграмм при создании бота  
-[Страница на DockerHub](https://hub.docker.com/repository/docker/engry995/bart-bot/general)
+[Страница на DockerHub](https://hub.docker.com/r/engry995/bart-bot)
 
 ### Запуск из исходных файлов
 
